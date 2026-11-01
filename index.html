@@ -1,194 +1,1286 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8fafc">
-  <meta name="description" content="Find Chevron and Texaco gas stations in Cherokee County, Georgia.">
-  <title>Cherokee Fuel Finder</title>
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="preconnect" href="https://tile.openstreetmap.org">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <style>
-    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f7f9fc;font-synthesis:none}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh}
-    .topbar{height:68px;background:#fff;border-bottom:1px solid #e6eaf0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:16px}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:-.4px}.logo{width:36px;height:36px;border-radius:11px;background:#e8f1ff;color:#1765c1;display:grid;place-items:center;font-size:20px}
-    .topright{display:flex;align-items:center;gap:12px;color:#64748b;font-size:13px}.county{background:#f1f5f9;padding:8px 12px;border-radius:99px}
-    .layout{height:calc(100vh - 68px);min-height:600px;display:grid;grid-template-columns:390px minmax(0,1fr)}
-    .sidebar{background:#fff;border-right:1px solid #e6eaf0;display:flex;flex-direction:column;min-height:0;z-index:500}
-    .sidehead{padding:22px 20px 14px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;font-weight:800;color:#64748b}
-    h1{font-size:25px;letter-spacing:-1px;margin:6px 0 5px}.sub{font-size:13px;color:#64748b;margin:0 0 17px}
-    .searchwrap{position:relative}.searchwrap span{position:absolute;left:13px;top:11px;color:#94a3b8}.search{width:100%;height:42px;border:1px solid #dce3ec;border-radius:11px;padding:0 12px 0 38px;font-size:14px;outline:none;background:#fbfcfe}.search:focus{border-color:#6da5ed;box-shadow:0 0 0 3px #dbeafe}
-    .filters{display:flex;gap:8px;margin-top:12px}.filter{border:1px solid #dce3ec;border-radius:99px;background:#fff;padding:8px 12px;font-size:12px;font-weight:700;color:#475569;cursor:pointer}.filter.active{background:#eaf2ff;border-color:#9cc4f5;color:#1559a6}.filter[data-brand="Texaco"].active{background:#fff1ef;border-color:#f4aaa0;color:#b83228}
-    .summary{display:flex;gap:8px;padding:0 20px 14px}.stat{flex:1;background:#f7f9fc;border:1px solid #edf0f4;border-radius:11px;padding:10px 12px}.stat strong{display:block;font-size:19px}.stat small{font-size:11px;color:#64748b}
-    .listhead{padding:12px 20px;border-top:1px solid #eef1f5;border-bottom:1px solid #eef1f5;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;color:#475569}
-    #stationList{overflow:auto;padding:8px 12px 24px}.station{width:100%;text-align:left;display:flex;gap:12px;padding:13px 10px;border:0;border-bottom:1px solid #f0f2f5;background:#fff;cursor:pointer;border-radius:10px;color:inherit}.station:hover,.station.selected{background:#f3f7fc}.pin{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;color:white;font-size:12px;font-weight:900}.pin.chevron{background:#1768bd}.pin.texaco{background:#c63c35}.stationbody{min-width:0;flex:1}.stationtitle{font-size:13px;font-weight:800;margin:0 0 4px}.address{font-size:12px;color:#64748b;line-height:1.4}.stationfoot{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:11px;color:#64748b}.tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:99px;background:#eaf2ff;color:#1761ad}.tag.texaco{background:#fff0ef;color:#b83228}.empty{padding:30px 15px;text-align:center;color:#64748b;font-size:13px}
-    .maparea{position:relative;min-width:0;min-height:0}#map{height:100%;width:100%;background:#e8edf2}
-    .maptools{position:absolute;top:16px;right:16px;z-index:400;display:flex;gap:8px}.tool{border:1px solid #dbe2ea;background:#fff;color:#334155;border-radius:10px;padding:10px 13px;font-size:12px;font-weight:800;box-shadow:0 2px 8px #0f172a12;cursor:pointer}.tool:hover{background:#f8fafc}.tool.primary{background:#1768bd;color:white;border-color:#1768bd}
-    .mapnote{position:absolute;bottom:18px;left:18px;z-index:400;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:11px;color:#64748b;box-shadow:0 2px 8px #0f172a12;max-width:min(430px,calc(100% - 36px))}
-    .leaflet-popup-content-wrapper{border-radius:12px}.popupname{font-weight:800;font-size:14px;margin-bottom:4px}.popupaddr{font-size:12px;color:#64748b;margin-bottom:10px}.popupactions{display:flex;gap:8px}.popupactions a{display:inline-block;text-decoration:none;background:#1768bd;color:#fff;padding:7px 10px;border-radius:7px;font-size:11px;font-weight:800}.popupactions a.secondary{background:#eef4fb;color:#185a9f}
-    .status{font-size:11px;color:#64748b;margin-top:10px;min-height:16px}
-    /* Tablet and phone layout */
-    @media(max-width:800px){
-      html,body{height:100%;overflow:hidden}
-      .topbar{height:54px;padding:0 12px;gap:8px;min-height:54px}
-      .brand{font-size:15px;gap:8px;letter-spacing:-.3px}.logo{width:31px;height:31px;border-radius:9px;font-size:18px}
-      .topright{font-size:10px}.topright>span:first-child{display:none}.topright .county{display:block;padding:6px 9px;white-space:nowrap}
-      .layout{height:calc(100dvh - 54px);min-height:0;grid-template-columns:1fr;grid-template-rows:minmax(230px,44dvh) minmax(0,1fr)}
-      .maparea{grid-row:1;min-height:0}.sidebar{grid-row:2;border-right:0;border-top:1px solid #dce3ec;min-height:0;box-shadow:0 -3px 14px #0f172a0b}
-      .sidehead{padding:10px 13px 7px}.eyebrow{font-size:9px;letter-spacing:1px}
-      h1{font-size:18px;line-height:1.15;margin:3px 0}.sub{font-size:11px;margin:0 0 9px}
-      .search{height:42px;font-size:16px;border-radius:12px}.searchwrap span{top:10px}
-      .filters{gap:7px;margin-top:8px}.filter{flex:1;padding:9px 7px;font-size:12px;min-height:38px;white-space:nowrap}
-      .status{font-size:10px;margin-top:5px;min-height:13px}
-      .summary{gap:6px;padding:0 12px 8px}.stat{padding:6px 8px;border-radius:9px;text-align:center}.stat strong{font-size:16px;line-height:1.2}.stat small{font-size:10px}
-      .listhead{padding:8px 13px;font-size:11px;position:sticky;top:0;background:#fff;z-index:2}
-      #stationList{padding:4px 8px calc(16px + env(safe-area-inset-bottom));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-      .station{padding:12px 9px;gap:10px;min-height:68px}.pin{width:38px;height:38px;flex-basis:38px;border-radius:11px}.stationtitle{font-size:13px}.address{font-size:12px}.stationfoot{margin-top:5px}
-      .maptools{top:9px;right:9px;gap:6px}.tool{min-height:40px;padding:9px 11px;font-size:11px;border-radius:11px;touch-action:manipulation}
-      .mapnote{display:none}.leaflet-control-zoom a{width:38px!important;height:38px!important;line-height:38px!important;font-size:20px!important}
-      .leaflet-popup-content{margin:12px 14px}.leaflet-popup-content-wrapper{max-width:calc(100vw - 42px)}
-      .popupactions a{padding:10px 12px;font-size:12px}
-    }
-    @media(max-width:390px){
-      .topright .county{font-size:9px;padding:5px 7px}.brand{font-size:14px}
-      .layout{grid-template-rows:minmax(210px,40dvh) minmax(0,1fr)}
-      .sidehead{padding-top:8px}.sub{font-size:10px}.filter{font-size:11px;padding-left:4px;padding-right:4px}
-      .stat small{font-size:9px}
-    }
-    @media(max-width:800px) and (orientation:landscape){
-      .layout{grid-template-rows:minmax(160px,52dvh) minmax(0,1fr)}
-      .sidehead{padding:7px 12px 5px}.eyebrow,.sub{display:none}h1{font-size:16px;margin:0 0 6px}
-      .filters{margin-top:6px}.summary{padding-bottom:5px}.stat{padding:4px 7px}
-    }
-    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8fafc">
+<title>Cherokee Fuel Finder</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+:root {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #f7f9fc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+button, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.topbar {
+  height: 64px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-bottom: 1px solid #e6eaf0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 850;
+  font-size: 17px;
+}
+
+.logo {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #e8f1ff;
+  color: #1765c1;
+  font-size: 22px;
+}
+
+.county {
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 30px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.layout {
+  height: calc(100% - 64px);
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  overflow: hidden;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: white;
+  border-right: 1px solid #e6eaf0;
+  z-index: 500;
+}
+
+.sidehead {
+  padding: 22px 20px 14px;
+}
+
+.eyebrow {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 7px 0;
+  font-size: 25px;
+  letter-spacing: -1px;
+}
+
+.sub {
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.searchwrap {
+  position: relative;
+}
+
+.searchwrap span {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  color: #94a3b8;
+}
+
+.search {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px 0 40px;
+  border: 1px solid #dce3ec;
+  border-radius: 12px;
+  background: #fbfcfe;
+  outline: none;
+  font-size: 14px;
+}
+
+.search:focus {
+  border-color: #6da5ed;
+  box-shadow: 0 0 0 3px #dbeafe;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.filter {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid #dce3ec;
+  border-radius: 30px;
+  background: white;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.filter.active {
+  background: #eaf2ff;
+  border-color: #9cc4f5;
+  color: #1559a6;
+}
+
+.filter[data-brand="Texaco"].active {
+  background: #fff1ef;
+  border-color: #f4aaa0;
+  color: #b83228;
+}
+
+.status {
+  margin-top: 10px;
+  color: #64748b;
+  font-size: 11px;
+  min-height: 16px;
+}
+
+.summary {
+  display: flex;
+  gap: 8px;
+  padding: 0 18px 14px;
+}
+
+.stat {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #edf0f4;
+  border-radius: 11px;
+  background: #f7f9fc;
+}
+
+.stat strong {
+  display: block;
+  font-size: 19px;
+}
+
+.stat small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.listhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-top: 1px solid #eef1f5;
+  border-bottom: 1px solid #eef1f5;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#stationList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 12px 20px;
+}
+
+.station {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 13px 10px;
+  margin-bottom: 5px;
+  border: 1px solid #edf0f4;
+  border-radius: 12px;
+  background: white;
+  color: inherit;
+  text-align: left;
+}
+
+.station:hover,
+.station.selected {
+  background: #f3f7fc;
+}
+
+.station:focus-visible {
+  outline: 3px solid #93c5fd;
+}
+
+.pin {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: white;
+  font-weight: 900;
+}
+
+.pin.chevron {
+  background: #1768bd;
+}
+
+.pin.texaco {
+  background: #c63c35;
+}
+
+.stationbody {
+  flex: 1;
+  min-width: 0;
+}
+
+.stationtitle {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.address {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.stationfoot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.tag {
+  padding: 4px 8px;
+  border-radius: 30px;
+  background: #eaf2ff;
+  color: #1761ad;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.tag.texaco {
+  background: #fff0ef;
+  color: #b83228;
+}
+
+.station-actions {
+  flex: 0 0 auto;
+}
+
+.station-directions {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  border-radius: 10px;
+  background: #1768bd;
+  color: white;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 40px 15px;
+  color: #64748b;
+  text-align: center;
+}
+
+.maparea {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  background: #e8edf2;
+}
+
+.maptools {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 400;
+  display: flex;
+  gap: 8px;
+}
+
+.tool {
+  min-height: 42px;
+  padding: 10px 13px;
+  border: 1px solid #dbe2ea;
+  border-radius: 11px;
+  background: white;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 850;
+  box-shadow: 0 2px 8px #0f172a12;
+}
+
+.tool.primary {
+  background: #1768bd;
+  color: white;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.mapnote {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  z-index: 400;
+  padding: 9px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  color: #64748b;
+  font-size: 11px;
+}
+
+/* =================================
+   PHONE LAYOUT
+================================= */
+
+@media (max-width: 800px) {
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .topbar {
+    height: 56px;
+    min-height: 56px;
+    padding: 0 12px;
+  }
+
+  .brand {
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .county {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+
+  .topright > span:first-child {
+    display: none;
+  }
+
+  .layout {
+    position: relative;
+    display: block;
+    height: calc(100dvh - 56px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Map is the default phone screen. */
+
+  .maparea {
+    position: absolute;
+    inset: 0;
+  }
+
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Hide station list until requested. */
+
+  .sidebar {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 600;
+    min-height: 0;
+    border: 0;
+    background: #f5f7fb;
+  }
+
+  .layout.show-list .sidebar {
+    display: flex;
+  }
+
+  .layout.show-list .maparea {
+    display: none;
+  }
+
+  .mobile-only {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidehead {
+    padding: 14px 14px 10px;
+    background: white;
+  }
+
+  h1 {
+    margin: 5px 0;
+    font-size: 21px;
+  }
+
+  .sub {
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+
+  /* Large search input for mobile keyboards. */
+
+  .search {
+    height: 52px;
+    border-radius: 14px;
+    padding-left: 43px;
+    font-size: 16px;
+  }
+
+  .searchwrap span {
+    top: 15px;
+    left: 15px;
+    font-size: 18px;
+  }
+
+  /* Large filter buttons. */
+
+  .filters {
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  .filter {
+    min-height: 46px;
+    padding: 8px 5px;
+    font-size: 12px;
+    touch-action: manipulation;
+  }
+
+  .status {
+    margin-top: 8px;
+    font-size: 10px;
+  }
+
+  .summary {
+    gap: 6px;
+    padding: 0 12px 10px;
+    background: white;
+  }
+
+  .stat {
+    padding: 8px 4px;
+    text-align: center;
+  }
+
+  .stat strong {
+    font-size: 18px;
+  }
+
+  .stat small {
+    font-size: 9px;
+  }
+
+  .listhead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    min-height: 52px;
+    padding: 8px 13px;
+    background: white;
+  }
+
+  #stationList {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 7px 9px calc(25px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .station {
+    min-height: 82px;
+    padding: 12px 9px;
+    margin-bottom: 7px;
+    gap: 9px;
+    border-radius: 13px;
+    background: white;
+  }
+
+  .pin {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+
+  .stationtitle {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .address {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .station-directions {
+    min-height: 43px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  /* Floating map controls. */
+
+  .maptools {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    gap: 7px;
+  }
+
+  .tool {
+    min-height: 46px;
+    padding: 10px 11px;
+    border-radius: 13px;
+    font-size: 11px;
+    touch-action: manipulation;
+  }
+
+  #stationsToggle {
+    margin-right: auto;
+    color: #1761ad;
+  }
+
+  .mapnote {
+    display: none;
+  }
+
+  /* Larger map zoom controls. */
+
+  .leaflet-control-zoom {
+    margin: 0 12px 15px 0 !important;
+  }
+
+  .leaflet-control-zoom a {
+    width: 46px !important;
+    height: 46px !important;
+    line-height: 46px !important;
+    font-size: 23px !important;
+  }
+
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 35px);
+    border-radius: 15px;
+  }
+
+  .leaflet-popup-content {
+    min-width: 185px;
+    margin: 14px;
+  }
+
+  .popupactions a {
+    min-height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .brand {
+    font-size: 12px;
+  }
+
+  .county {
+    font-size: 8px;
+  }
+
+  .station {
+    gap: 7px;
+    padding: 10px 7px;
+  }
+
+  .station-directions {
+    padding: 0 8px;
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+</style>
 </head>
+
 <body>
+
 <header class="topbar">
-  <div class="brand"><div class="logo">⌖</div><span>Cherokee Fuel Finder</span></div>
-  <div class="topright"><span>Chevron + Texaco locator</span><span class="county">Cherokee County, Georgia</span></div>
+  <div class="brand">
+    <div class="logo">⌖</div>
+    <span>Cherokee Fuel Finder</span>
+  </div>
+
+  <div class="topright">
+    <span>Chevron + Texaco locator</span>
+    <span class="county">Cherokee County, Georgia</span>
+  </div>
 </header>
+
 <main class="layout">
+
   <aside class="sidebar">
+
     <section class="sidehead">
       <div class="eyebrow">Local station directory</div>
+
       <h1>Find your next fuel stop.</h1>
-      <p class="sub">Explore Chevron and Texaco locations around Cherokee County.</p>
-      <div class="searchwrap"><span>⌕</span><input id="search" class="search" type="search" placeholder="Search station, city, or address…" autocomplete="off"></div>
+
+      <p class="sub">
+        Explore Chevron and Texaco locations around Cherokee County.
+      </p>
+
+      <div class="searchwrap">
+        <span>⌕</span>
+        <input
+          id="search"
+          class="search"
+          type="search"
+          placeholder="Search station, city, or address..."
+          autocomplete="off"
+        >
+      </div>
+
       <div class="filters">
         <button class="filter active" data-brand="All">All brands</button>
         <button class="filter" data-brand="Chevron">🔵 Chevron</button>
         <button class="filter" data-brand="Texaco">🔴 Texaco</button>
       </div>
-      <div class="status" id="status">Loading station locations…</div>
+
+      <div class="status" id="status">
+        Loading station locations...
+      </div>
     </section>
+
     <section class="summary">
-      <div class="stat"><strong id="totalCount">—</strong><small>Stations listed</small></div>
-      <div class="stat"><strong id="chevronCount">—</strong><small>Chevron</small></div>
-      <div class="stat"><strong id="texacoCount">—</strong><small>Texaco</small></div>
+      <div class="stat">
+        <strong id="totalCount">—</strong>
+        <small>Stations</small>
+      </div>
+
+      <div class="stat">
+        <strong id="chevronCount">—</strong>
+        <small>Chevron</small>
+      </div>
+
+      <div class="stat">
+        <strong id="texacoCount">—</strong>
+        <small>Texaco</small>
+      </div>
     </section>
-    <div class="listhead"><span>STATIONS</span><span id="resultCount">0 results</span></div>
-    <div id="stationList" aria-live="polite"></div>
-  </aside>
-  <section class="maparea">
-    <div id="map" aria-label="Map of Chevron and Texaco gas stations in Cherokee County"></div>
-    <div class="maptools">
-      <button class="tool" id="locate">◎ My location</button>
-      <button class="tool primary" id="countyView">County view</button>
+
+    <div class="listhead">
+      <span>STATIONS <span id="resultCount">0 results</span></span>
+      <button class="tool mobile-only" id="mapToggle">← Map</button>
     </div>
-    <div class="mapnote">Map data © OpenStreetMap contributors · Station locations are geocoded from listed addresses.</div>
+
+    <div id="stationList" aria-live="polite"></div>
+
+  </aside>
+
+  <section class="maparea">
+
+    <div id="map"></div>
+
+    <div class="maptools">
+      <button class="tool mobile-only" id="stationsToggle">
+        ☷ Stations
+      </button>
+
+      <button class="tool" id="locate">
+        ◎ My location
+      </button>
+
+      <button class="tool primary" id="countyView">
+        County view
+      </button>
+    </div>
+
+    <div class="mapnote">
+      Map data © OpenStreetMap contributors
+    </div>
+
   </section>
+
 </main>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-const map = L.map('map', {zoomControl:true}).setView([34.23,-84.48], 10);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+const map = L.map("map", {
+  zoomControl: false
+}).setView([34.23, -84.48], 10);
+
+L.control.zoom({
+  position: "bottomright"
 }).addTo(map);
 
-const icons = {
-  Chevron: L.divIcon({className:'',html:'<div style="background:#1768bd;color:white;border:2px solid white;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);width:28px;height:28px;display:grid;place-items:center;box-shadow:0 2px 6px #0003"><span style="transform:rotate(45deg);font-size:10px;font-weight:900">C</span></div>',iconSize:[28,28],iconAnchor:[14,25]}),
-  Texaco: L.divIcon({className:'',html:'<div style="background:#c63c35;color:white;border:2px solid white;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);width:28px;height:28px;display:grid;place-items:center;box-shadow:0 2px 6px #0003"><span style="transform:rotate(45deg);font-size:10px;font-weight:900">T</span></div>',iconSize:[28,28],iconAnchor:[14,25]})
-};
-let stations=[], activeBrand='All', markers=new Map(), selectedId=null, userMarker=null;
+L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }
+).addTo(map);
 
-function directionsUrl(s){return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(s.address)+'&travelmode=driving'}
-function searchUrl(s){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(s.address)}
-function popupHtml(s){
-  const brandClass=s.brand==='Texaco'?'texaco':'';
-  return `<div class="popupname">${escapeHtml(s.name)}</div><div style="margin-bottom:5px"><span class="tag ${brandClass}">${s.brand}</span></div><div class="popupaddr">${escapeHtml(s.address)}${s.phone?'<br>'+escapeHtml(s.phone):''}</div><div class="popupactions"><a href="${directionsUrl(s)}" target="_blank" rel="noopener">Navigate ↗</a><a class="secondary" href="${searchUrl(s)}" target="_blank" rel="noopener">Details ↗</a></div>`;
+const icons = {
+  Chevron: L.divIcon({
+    className: "",
+    html: `<div style="
+      background:#1768bd;
+      color:white;
+      border:2px solid white;
+      border-radius:50% 50% 50% 4px;
+      transform:rotate(-45deg);
+      width:30px;
+      height:30px;
+      display:grid;
+      place-items:center;
+      box-shadow:0 2px 6px #0003
+    "><span style="transform:rotate(45deg);font-weight:900">C</span></div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 27]
+  }),
+
+  Texaco: L.divIcon({
+    className: "",
+    html: `<div style="
+      background:#c63c35;
+      color:white;
+      border:2px solid white;
+      border-radius:50% 50% 50% 4px;
+      transform:rotate(-45deg);
+      width:30px;
+      height:30px;
+      display:grid;
+      place-items:center;
+      box-shadow:0 2px 6px #0003
+    "><span style="transform:rotate(45deg);font-weight:900">T</span></div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 27]
+  })
+};
+
+let stations = [];
+let activeBrand = "All";
+let markers = new Map();
+let selectedId = null;
+let userMarker = null;
+
+const layout = document.querySelector(".layout");
+
+function directionsUrl(station) {
+  return "https://www.google.com/maps/dir/?api=1&destination=" +
+    encodeURIComponent(station.address) +
+    "&travelmode=driving";
 }
-function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function filtered(){
- const q=document.getElementById('search').value.trim().toLowerCase();
- return stations.filter(s=>(activeBrand==='All'||s.brand===activeBrand)&&(!q||[s.name,s.brand,s.address].join(' ').toLowerCase().includes(q)));
+
+function searchUrl(station) {
+  return "https://www.google.com/maps/search/?api=1&query=" +
+    encodeURIComponent(station.address);
 }
-function render(){
- const visible=filtered();
- document.getElementById('resultCount').textContent=visible.length+' results';
- const list=document.getElementById('stationList');
- list.innerHTML=visible.length?'':'<div class="empty">No stations match that search.</div>';
- visible.forEach(s=>{
-   const b=document.createElement('button');b.className='station'+(selectedId===s.id?' selected':'');b.type='button';
-   b.innerHTML=`<div class="pin ${s.brand.toLowerCase()}">${s.brand==='Chevron'?'C':'T'}</div><div class="stationbody"><div class="stationtitle">${escapeHtml(s.name)}</div><div class="address">${escapeHtml(s.address)}</div><div class="stationfoot"><span class="tag ${s.brand==='Texaco'?'texaco':''}">${s.brand}</span>${s.phone?'<span>'+escapeHtml(s.phone)+'</span>':''}</div></div>`;
-   b.addEventListener('click',()=>selectStation(s.id,true));list.appendChild(b);
- });
- stations.forEach(s=>{const m=markers.get(s.id);if(m){if(visible.includes(s)){if(!map.hasLayer(m))m.addTo(map)}else if(map.hasLayer(m))map.removeLayer(m)}});
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
 }
-function selectStation(id,zoom){
- const s=stations.find(x=>x.id===id),m=markers.get(id);if(!s||!m)return;
- selectedId=id;render();if(zoom)map.flyTo(m.getLatLng(),15,{duration:.6});m.openPopup();
+
+function popupHtml(station) {
+  const brandClass =
+    station.brand === "Texaco" ? "texaco" : "";
+
+  return `
+    <div class="popupname">
+      ${escapeHtml(station.name)}
+    </div>
+
+    <div style="margin-bottom:8px">
+      <span class="tag ${brandClass}">
+        ${station.brand}
+      </span>
+    </div>
+
+    <div class="popupaddr">
+      ${escapeHtml(station.address)}
+    </div>
+
+    <div class="popupactions">
+      <a href="${directionsUrl(station)}"
+         target="_blank"
+         rel="noopener">
+        Navigate ↗
+      </a>
+
+      <a class="secondary"
+         href="${searchUrl(station)}"
+         target="_blank"
+         rel="noopener">
+        Details ↗
+      </a>
+    </div>
+  `;
 }
-async function geocode(address){
- const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(address);
- const res=await fetch(url,{headers:{'Accept':'application/json'}});if(!res.ok)throw new Error('Geocoding request failed');
- const data=await res.json();return data[0]?{lat:Number(data[0].lat),lon:Number(data[0].lon)}:null;
+
+function filteredStations() {
+  const query = document
+    .getElementById("search")
+    .value.trim()
+    .toLowerCase();
+
+  return stations.filter(station => {
+    const matchesBrand =
+      activeBrand === "All" ||
+      station.brand === activeBrand;
+
+    const matchesSearch =
+      !query ||
+      [
+        station.name,
+        station.brand,
+        station.address
+      ].join(" ").toLowerCase().includes(query);
+
+    return matchesBrand && matchesSearch;
+  });
 }
-async function start(){
- try{
-   const response=await fetch('./stations.json');if(!response.ok)throw new Error('Could not load stations.json');stations=await response.json();
-   document.getElementById('totalCount').textContent=stations.length;
-   document.getElementById('chevronCount').textContent=stations.filter(s=>s.brand==='Chevron').length;
-   document.getElementById('texacoCount').textContent=stations.filter(s=>s.brand==='Texaco').length;
-   render();
-   let done=0,failed=0;
-   for(const s of stations){
-     const cached=localStorage.getItem('cff_geo_'+s.id);
-     let point=cached?JSON.parse(cached):null;
-     if(!point){
-       try{point=await geocode(s.address);if(point)localStorage.setItem('cff_geo_'+s.id,JSON.stringify(point));else failed++}
-       catch(e){failed++}
-       await new Promise(r=>setTimeout(r,1100));
-     }
-     if(point){
-       const marker=L.marker([point.lat,point.lon],{icon:icons[s.brand]}).bindPopup(popupHtml(s));
-       marker.on('click',()=>{selectedId=s.id;render()});marker.addTo(map);markers.set(s.id,marker);
-     }
-     done++;document.getElementById('status').textContent=`Placing stations on map: ${done}/${stations.length}${failed?' · '+failed+' not located':''}`;
-   }
-   const bounds=L.latLngBounds([...markers.values()].map(m=>m.getLatLng()));
-   if(bounds.isValid())map.fitBounds(bounds.pad(.12));
-   document.getElementById('status').textContent=`${markers.size} of ${stations.length} stations mapped · Select a listing or pin for directions.`;
-   render();
- }catch(e){document.getElementById('status').textContent='Could not load station data. Open this site through GitHub Pages or a local web server.';console.error(e)}
+
+function renderStations() {
+  const visible = filteredStations();
+
+  document.getElementById("resultCount").textContent =
+    " · " + visible.length + " results";
+
+  const list = document.getElementById("stationList");
+
+  list.innerHTML = "";
+
+  if (visible.length === 0) {
+    list.innerHTML =
+      '<div class="empty">No stations match your search.</div>';
+  }
+
+  visible.forEach(station => {
+    const card = document.createElement("div");
+
+    card.className =
+      "station" +
+      (selectedId === station.id ? " selected" : "");
+
+    card.setAttribute("role", "button");
+    card.tabIndex = 0;
+
+    card.innerHTML = `
+      <div class="pin ${station.brand.toLowerCase()}">
+        ${station.brand === "Chevron" ? "C" : "T"}
+      </div>
+
+      <div class="stationbody">
+        <div class="stationtitle">
+          ${escapeHtml(station.name)}
+        </div>
+
+        <div class="address">
+          ${escapeHtml(station.address)}
+        </div>
+
+        <div class="stationfoot">
+          <span class="tag ${
+            station.brand === "Texaco" ? "texaco" : ""
+          }">
+            ${station.brand}
+          </span>
+
+          ${
+            station.phone
+              ? "<span>" + escapeHtml(station.phone) + "</span>"
+              : ""
+          }
+        </div>
+      </div>
+
+      <div class="station-actions">
+        <a class="station-directions"
+           href="${directionsUrl(station)}"
+           target="_blank"
+           rel="noopener">
+          Go ↗
+        </a>
+      </div>
+    `;
+
+    function selectCard() {
+      selectStation(station.id, true);
+
+      if (window.matchMedia("(max-width: 800px)").matches) {
+        showMapView();
+      }
+    }
+
+    card.addEventListener("click", event => {
+      if (event.target.closest("a")) return;
+      selectCard();
+    });
+
+    card.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectCard();
+      }
+    });
+
+    list.appendChild(card);
+  });
+
+  stations.forEach(station => {
+    const marker = markers.get(station.id);
+
+    if (!marker) return;
+
+    if (visible.includes(station)) {
+      if (!map.hasLayer(marker)) marker.addTo(map);
+    } else {
+      if (map.hasLayer(marker)) map.removeLayer(marker);
+    }
+  });
 }
-document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{
- document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeBrand=btn.dataset.brand;render();
-}));
-document.getElementById('search').addEventListener('input',render);
-document.getElementById('countyView').addEventListener('click',()=>map.flyTo([34.23,-84.48],10));
-document.getElementById('locate').addEventListener('click',()=>{
- if(!navigator.geolocation){alert('Location is not supported by this browser.');return}
- navigator.geolocation.getCurrentPosition(pos=>{
-   const p=[pos.coords.latitude,pos.coords.longitude];map.flyTo(p,14);
-   if(userMarker)userMarker.remove();userMarker=L.circleMarker(p,{radius:8,color:'#fff',weight:3,fillColor:'#16a34a',fillOpacity:1}).addTo(map).bindPopup('Your current location').openPopup();
- },()=>alert('Could not access your location. Allow location permission and try again.'),{enableHighAccuracy:true,timeout:10000});
+
+function selectStation(id, zoom) {
+  const station = stations.find(s => s.id === id);
+  const marker = markers.get(id);
+
+  if (!station || !marker) return;
+
+  selectedId = id;
+  renderStations();
+
+  if (zoom) {
+    map.flyTo(marker.getLatLng(), 15, {
+      duration: 0.6
+    });
+  }
+
+  marker.openPopup();
+}
+
+function showListView() {
+  layout.classList.add("show-list");
+
+  document
+    .getElementById("stationsToggle")
+    .setAttribute("aria-expanded", "true");
+
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+function showMapView() {
+  layout.classList.remove("show-list");
+
+  document
+    .getElementById("stationsToggle")
+    .setAttribute("aria-expanded", "false");
+
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+document
+  .getElementById("stationsToggle")
+  .addEventListener("click", showListView);
+
+document
+  .getElementById("mapToggle")
+  .addEventListener("click", showMapView);
+
+document.querySelectorAll(".filter").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".filter").forEach(item => {
+      item.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    activeBrand = button.dataset.brand;
+
+    renderStations();
+  });
 });
-window.addEventListener('resize',()=>map.invalidateSize());
-window.addEventListener('orientationchange',()=>setTimeout(()=>map.invalidateSize(),250));
+
+document
+  .getElementById("search")
+  .addEventListener("input", renderStations);
+
+document
+  .getElementById("countyView")
+  .addEventListener("click", () => {
+    map.flyTo([34.23, -84.48], 10);
+  });
+
+document
+  .getElementById("locate")
+  .addEventListener("click", () => {
+    const status = document.getElementById("status");
+
+    if (!navigator.geolocation) {
+      status.textContent =
+        "Location is not supported by this browser.";
+      return;
+    }
+
+    status.textContent = "Finding your location...";
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const point = [
+          position.coords.latitude,
+          position.coords.longitude
+        ];
+
+        map.flyTo(point, 14);
+
+        if (userMarker) {
+          userMarker.remove();
+        }
+
+        userMarker = L.circleMarker(point, {
+          radius: 10,
+          color: "#fff",
+          weight: 3,
+          fillColor: "#16a34a",
+          fillOpacity: 1
+        })
+        .addTo(map)
+        .bindPopup("Your current location")
+        .openPopup();
+
+        status.textContent = "Your location is shown on the map.";
+      },
+
+      () => {
+        status.textContent =
+          "Location unavailable. Allow location access and try again.";
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 60000
+      }
+    );
+  });
+
+async function geocode(address) {
+  const url =
+    "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" +
+    encodeURIComponent(address);
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Geocoding failed");
+  }
+
+  const results = await response.json();
+
+  if (!results.length) return null;
+
+  return {
+    lat: Number(results[0].lat),
+    lon: Number(results[0].lon)
+  };
+}
+
+async function start() {
+  const status = document.getElementById("status");
+
+  try {
+    const response = await fetch("./stations.json");
+
+    if (!response.ok) {
+      throw new Error("Could not load station database.");
+    }
+
+    stations = await response.json();
+
+    document.getElementById("totalCount").textContent =
+      stations.length;
+
+    document.getElementById("chevronCount").textContent =
+      stations.filter(s => s.brand === "Chevron").length;
+
+    document.getElementById("texacoCount").textContent =
+      stations.filter(s => s.brand === "Texaco").length;
+
+    renderStations();
+
+    let completed = 0;
+    let failed = 0;
+
+    for (const station of stations) {
+      const cacheKey = "cff_geo_" + station.id;
+      let point = null;
+
+      try {
+        const cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+          point = JSON.parse(cached);
+        } else {
+          point = await geocode(station.address);
+
+          if (point) {
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify(point)
+            );
+          } else {
+            failed++;
+          }
+
+          // Respect the public geocoding service's rate limit.
+          await new Promise(resolve =>
+            setTimeout(resolve, 1100)
+          );
+        }
+      } catch (error) {
+        failed++;
+      }
+
+      if (point) {
+        const marker = L.marker(
+          [point.lat, point.lon],
+          { icon: icons[station.brand] }
+        )
+        .bindPopup(popupHtml(station));
+
+        marker.on("click", () => {
+          selectedId = station.id;
+          renderStations();
+        });
+
+        marker.addTo(map);
+        markers.set(station.id, marker);
+      }
+
+      completed++;
+
+      status.textContent =
+        `Loading map: ${completed}/${stations.length}`;
+    }
+
+    const bounds = L.latLngBounds(
+      [...markers.values()].map(marker =>
+        marker.getLatLng()
+      )
+    );
+
+    if (bounds.isValid()) {
+      map.fitBounds(bounds.pad(0.12));
+    }
+
+    status.textContent =
+      `${markers.size} of ${stations.length} stations mapped` +
+      (failed ? ` · ${failed} could not be located` : "");
+
+    renderStations();
+
+  } catch (error) {
+    status.textContent =
+      "Could not load station data. Check that stations.json is in your GitHub repository.";
+    console.error(error);
+  }
+}
+
+window.addEventListener("resize", () => {
+  map.invalidateSize({ pan: false });
+});
+
+window.addEventListener("orientationchange", () => {
+  setTimeout(() => map.invalidateSize(), 350);
+});
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    map.invalidateSize({ pan: false });
+  });
+}
+
 start();
 </script>
+
 </body>
 </html>
