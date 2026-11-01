@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8fafc">
+  <meta name="description" content="Find Chevron and Texaco gas stations in Cherokee County, Georgia.">
+  <title>Cherokee Fuel Finder</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f7f9fc;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh}
+    .topbar{height:68px;background:#fff;border-bottom:1px solid #e6eaf0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:-.4px}.logo{width:36px;height:36px;border-radius:11px;background:#e8f1ff;color:#1765c1;display:grid;place-items:center;font-size:20px}
+    .topright{display:flex;align-items:center;gap:12px;color:#64748b;font-size:13px}.county{background:#f1f5f9;padding:8px 12px;border-radius:99px}
+    .layout{height:calc(100vh - 68px);min-height:600px;display:grid;grid-template-columns:390px minmax(0,1fr)}
+    .sidebar{background:#fff;border-right:1px solid #e6eaf0;display:flex;flex-direction:column;min-height:0;z-index:500}
+    .sidehead{padding:22px 20px 14px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;font-weight:800;color:#64748b}
+    h1{font-size:25px;letter-spacing:-1px;margin:6px 0 5px}.sub{font-size:13px;color:#64748b;margin:0 0 17px}
+    .searchwrap{position:relative}.searchwrap span{position:absolute;left:13px;top:11px;color:#94a3b8}.search{width:100%;height:42px;border:1px solid #dce3ec;border-radius:11px;padding:0 12px 0 38px;font-size:14px;outline:none;background:#fbfcfe}.search:focus{border-color:#6da5ed;box-shadow:0 0 0 3px #dbeafe}
+    .filters{display:flex;gap:8px;margin-top:12px}.filter{border:1px solid #dce3ec;border-radius:99px;background:#fff;padding:8px 12px;font-size:12px;font-weight:700;color:#475569;cursor:pointer}.filter.active{background:#eaf2ff;border-color:#9cc4f5;color:#1559a6}.filter[data-brand="Texaco"].active{background:#fff1ef;border-color:#f4aaa0;color:#b83228}
+    .summary{display:flex;gap:8px;padding:0 20px 14px}.stat{flex:1;background:#f7f9fc;border:1px solid #edf0f4;border-radius:11px;padding:10px 12px}.stat strong{display:block;font-size:19px}.stat small{font-size:11px;color:#64748b}
+    .listhead{padding:12px 20px;border-top:1px solid #eef1f5;border-bottom:1px solid #eef1f5;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;color:#475569}
+    #stationList{overflow:auto;padding:8px 12px 24px}.station{width:100%;text-align:left;display:flex;gap:12px;padding:13px 10px;border:0;border-bottom:1px solid #f0f2f5;background:#fff;cursor:pointer;border-radius:10px;color:inherit}.station:hover,.station.selected{background:#f3f7fc}.pin{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;color:white;font-size:12px;font-weight:900}.pin.chevron{background:#1768bd}.pin.texaco{background:#c63c35}.stationbody{min-width:0;flex:1}.stationtitle{font-size:13px;font-weight:800;margin:0 0 4px}.address{font-size:12px;color:#64748b;line-height:1.4}.stationfoot{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:11px;color:#64748b}.tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:99px;background:#eaf2ff;color:#1761ad}.tag.texaco{background:#fff0ef;color:#b83228}.empty{padding:30px 15px;text-align:center;color:#64748b;font-size:13px}
+    .maparea{position:relative;min-width:0;min-height:0}#map{height:100%;width:100%;background:#e8edf2}
+    .maptools{position:absolute;top:16px;right:16px;z-index:400;display:flex;gap:8px}.tool{border:1px solid #dbe2ea;background:#fff;color:#334155;border-radius:10px;padding:10px 13px;font-size:12px;font-weight:800;box-shadow:0 2px 8px #0f172a12;cursor:pointer}.tool:hover{background:#f8fafc}.tool.primary{background:#1768bd;color:white;border-color:#1768bd}
+    .mapnote{position:absolute;bottom:18px;left:18px;z-index:400;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:11px;color:#64748b;box-shadow:0 2px 8px #0f172a12;max-width:min(430px,calc(100% - 36px))}
+    .leaflet-popup-content-wrapper{border-radius:12px}.popupname{font-weight:800;font-size:14px;margin-bottom:4px}.popupaddr{font-size:12px;color:#64748b;margin-bottom:10px}.popupactions{display:flex;gap:8px}.popupactions a{display:inline-block;text-decoration:none;background:#1768bd;color:#fff;padding:7px 10px;border-radius:7px;font-size:11px;font-weight:800}.popupactions a.secondary{background:#eef4fb;color:#185a9f}
+    .status{font-size:11px;color:#64748b;margin-top:10px;min-height:16px}
+    /* Tablet and phone layout */
+    @media(max-width:800px){
+      html,body{height:100%;overflow:hidden}
+      .topbar{height:54px;padding:0 12px;gap:8px;min-height:54px}
+      .brand{font-size:15px;gap:8px;letter-spacing:-.3px}.logo{width:31px;height:31px;border-radius:9px;font-size:18px}
+      .topright{font-size:10px}.topright>span:first-child{display:none}.topright .county{display:block;padding:6px 9px;white-space:nowrap}
+      .layout{height:calc(100dvh - 54px);min-height:0;grid-template-columns:1fr;grid-template-rows:minmax(230px,44dvh) minmax(0,1fr)}
+      .maparea{grid-row:1;min-height:0}.sidebar{grid-row:2;border-right:0;border-top:1px solid #dce3ec;min-height:0;box-shadow:0 -3px 14px #0f172a0b}
+      .sidehead{padding:10px 13px 7px}.eyebrow{font-size:9px;letter-spacing:1px}
+      h1{font-size:18px;line-height:1.15;margin:3px 0}.sub{font-size:11px;margin:0 0 9px}
+      .search{height:42px;font-size:16px;border-radius:12px}.searchwrap span{top:10px}
+      .filters{gap:7px;margin-top:8px}.filter{flex:1;padding:9px 7px;font-size:12px;min-height:38px;white-space:nowrap}
+      .status{font-size:10px;margin-top:5px;min-height:13px}
+      .summary{gap:6px;padding:0 12px 8px}.stat{padding:6px 8px;border-radius:9px;text-align:center}.stat strong{font-size:16px;line-height:1.2}.stat small{font-size:10px}
+      .listhead{padding:8px 13px;font-size:11px;position:sticky;top:0;background:#fff;z-index:2}
+      #stationList{padding:4px 8px calc(16px + env(safe-area-inset-bottom));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+      .station{padding:12px 9px;gap:10px;min-height:68px}.pin{width:38px;height:38px;flex-basis:38px;border-radius:11px}.stationtitle{font-size:13px}.address{font-size:12px}.stationfoot{margin-top:5px}
+      .maptools{top:9px;right:9px;gap:6px}.tool{min-height:40px;padding:9px 11px;font-size:11px;border-radius:11px;touch-action:manipulation}
+      .mapnote{display:none}.leaflet-control-zoom a{width:38px!important;height:38px!important;line-height:38px!important;font-size:20px!important}
+      .leaflet-popup-content{margin:12px 14px}.leaflet-popup-content-wrapper{max-width:calc(100vw - 42px)}
+      .popupactions a{padding:10px 12px;font-size:12px}
+    }
+    @media(max-width:390px){
+      .topright .county{font-size:9px;padding:5px 7px}.brand{font-size:14px}
+      .layout{grid-template-rows:minmax(210px,40dvh) minmax(0,1fr)}
+      .sidehead{padding-top:8px}.sub{font-size:10px}.filter{font-size:11px;padding-left:4px;padding-right:4px}
+      .stat small{font-size:9px}
+    }
+    @media(max-width:800px) and (orientation:landscape){
+      .layout{grid-template-rows:minmax(160px,52dvh) minmax(0,1fr)}
+      .sidehead{padding:7px 12px 5px}.eyebrow,.sub{display:none}h1{font-size:16px;margin:0 0 6px}
+      .filters{margin-top:6px}.summary{padding-bottom:5px}.stat{padding:4px 7px}
+    }
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">⌖</div><span>Cherokee Fuel Finder</span></div>
+  <div class="topright"><span>Chevron + Texaco locator</span><span class="county">Cherokee County, Georgia</span></div>
+</header>
+<main class="layout">
+  <aside class="sidebar">
+    <section class="sidehead">
+      <div class="eyebrow">Local station directory</div>
+      <h1>Find your next fuel stop.</h1>
+      <p class="sub">Explore Chevron and Texaco locations around Cherokee County.</p>
+      <div class="searchwrap"><span>⌕</span><input id="search" class="search" type="search" placeholder="Search station, city, or address…" autocomplete="off"></div>
+      <div class="filters">
+        <button class="filter active" data-brand="All">All brands</button>
+        <button class="filter" data-brand="Chevron">🔵 Chevron</button>
+        <button class="filter" data-brand="Texaco">🔴 Texaco</button>
+      </div>
+      <div class="status" id="status">Loading station locations…</div>
+    </section>
+    <section class="summary">
+      <div class="stat"><strong id="totalCount">—</strong><small>Stations listed</small></div>
+      <div class="stat"><strong id="chevronCount">—</strong><small>Chevron</small></div>
+      <div class="stat"><strong id="texacoCount">—</strong><small>Texaco</small></div>
+    </section>
+    <div class="listhead"><span>STATIONS</span><span id="resultCount">0 results</span></div>
+    <div id="stationList" aria-live="polite"></div>
+  </aside>
+  <section class="maparea">
+    <div id="map" aria-label="Map of Chevron and Texaco gas stations in Cherokee County"></div>
+    <div class="maptools">
+      <button class="tool" id="locate">◎ My location</button>
+      <button class="tool primary" id="countyView">County view</button>
+    </div>
+    <div class="mapnote">Map data © OpenStreetMap contributors · Station locations are geocoded from listed addresses.</div>
+  </section>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+const map = L.map('map', {zoomControl:true}).setView([34.23,-84.48], 10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+const icons = {
+  Chevron: L.divIcon({className:'',html:'<div style="background:#1768bd;color:white;border:2px solid white;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);width:28px;height:28px;display:grid;place-items:center;box-shadow:0 2px 6px #0003"><span style="transform:rotate(45deg);font-size:10px;font-weight:900">C</span></div>',iconSize:[28,28],iconAnchor:[14,25]}),
+  Texaco: L.divIcon({className:'',html:'<div style="background:#c63c35;color:white;border:2px solid white;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);width:28px;height:28px;display:grid;place-items:center;box-shadow:0 2px 6px #0003"><span style="transform:rotate(45deg);font-size:10px;font-weight:900">T</span></div>',iconSize:[28,28],iconAnchor:[14,25]})
+};
+let stations=[], activeBrand='All', markers=new Map(), selectedId=null, userMarker=null;
+
+function directionsUrl(s){return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(s.address)+'&travelmode=driving'}
+function searchUrl(s){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(s.address)}
+function popupHtml(s){
+  const brandClass=s.brand==='Texaco'?'texaco':'';
+  return `<div class="popupname">${escapeHtml(s.name)}</div><div style="margin-bottom:5px"><span class="tag ${brandClass}">${s.brand}</span></div><div class="popupaddr">${escapeHtml(s.address)}${s.phone?'<br>'+escapeHtml(s.phone):''}</div><div class="popupactions"><a href="${directionsUrl(s)}" target="_blank" rel="noopener">Navigate ↗</a><a class="secondary" href="${searchUrl(s)}" target="_blank" rel="noopener">Details ↗</a></div>`;
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function filtered(){
+ const q=document.getElementById('search').value.trim().toLowerCase();
+ return stations.filter(s=>(activeBrand==='All'||s.brand===activeBrand)&&(!q||[s.name,s.brand,s.address].join(' ').toLowerCase().includes(q)));
+}
+function render(){
+ const visible=filtered();
+ document.getElementById('resultCount').textContent=visible.length+' results';
+ const list=document.getElementById('stationList');
+ list.innerHTML=visible.length?'':'<div class="empty">No stations match that search.</div>';
+ visible.forEach(s=>{
+   const b=document.createElement('button');b.className='station'+(selectedId===s.id?' selected':'');b.type='button';
+   b.innerHTML=`<div class="pin ${s.brand.toLowerCase()}">${s.brand==='Chevron'?'C':'T'}</div><div class="stationbody"><div class="stationtitle">${escapeHtml(s.name)}</div><div class="address">${escapeHtml(s.address)}</div><div class="stationfoot"><span class="tag ${s.brand==='Texaco'?'texaco':''}">${s.brand}</span>${s.phone?'<span>'+escapeHtml(s.phone)+'</span>':''}</div></div>`;
+   b.addEventListener('click',()=>selectStation(s.id,true));list.appendChild(b);
+ });
+ stations.forEach(s=>{const m=markers.get(s.id);if(m){if(visible.includes(s)){if(!map.hasLayer(m))m.addTo(map)}else if(map.hasLayer(m))map.removeLayer(m)}});
+}
+function selectStation(id,zoom){
+ const s=stations.find(x=>x.id===id),m=markers.get(id);if(!s||!m)return;
+ selectedId=id;render();if(zoom)map.flyTo(m.getLatLng(),15,{duration:.6});m.openPopup();
+}
+async function geocode(address){
+ const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(address);
+ const res=await fetch(url,{headers:{'Accept':'application/json'}});if(!res.ok)throw new Error('Geocoding request failed');
+ const data=await res.json();return data[0]?{lat:Number(data[0].lat),lon:Number(data[0].lon)}:null;
+}
+async function start(){
+ try{
+   const response=await fetch('./stations.json');if(!response.ok)throw new Error('Could not load stations.json');stations=await response.json();
+   document.getElementById('totalCount').textContent=stations.length;
+   document.getElementById('chevronCount').textContent=stations.filter(s=>s.brand==='Chevron').length;
+   document.getElementById('texacoCount').textContent=stations.filter(s=>s.brand==='Texaco').length;
+   render();
+   let done=0,failed=0;
+   for(const s of stations){
+     const cached=localStorage.getItem('cff_geo_'+s.id);
+     let point=cached?JSON.parse(cached):null;
+     if(!point){
+       try{point=await geocode(s.address);if(point)localStorage.setItem('cff_geo_'+s.id,JSON.stringify(point));else failed++}
+       catch(e){failed++}
+       await new Promise(r=>setTimeout(r,1100));
+     }
+     if(point){
+       const marker=L.marker([point.lat,point.lon],{icon:icons[s.brand]}).bindPopup(popupHtml(s));
+       marker.on('click',()=>{selectedId=s.id;render()});marker.addTo(map);markers.set(s.id,marker);
+     }
+     done++;document.getElementById('status').textContent=`Placing stations on map: ${done}/${stations.length}${failed?' · '+failed+' not located':''}`;
+   }
+   const bounds=L.latLngBounds([...markers.values()].map(m=>m.getLatLng()));
+   if(bounds.isValid())map.fitBounds(bounds.pad(.12));
+   document.getElementById('status').textContent=`${markers.size} of ${stations.length} stations mapped · Select a listing or pin for directions.`;
+   render();
+ }catch(e){document.getElementById('status').textContent='Could not load station data. Open this site through GitHub Pages or a local web server.';console.error(e)}
+}
+document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{
+ document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeBrand=btn.dataset.brand;render();
+}));
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('countyView').addEventListener('click',()=>map.flyTo([34.23,-84.48],10));
+document.getElementById('locate').addEventListener('click',()=>{
+ if(!navigator.geolocation){alert('Location is not supported by this browser.');return}
+ navigator.geolocation.getCurrentPosition(pos=>{
+   const p=[pos.coords.latitude,pos.coords.longitude];map.flyTo(p,14);
+   if(userMarker)userMarker.remove();userMarker=L.circleMarker(p,{radius:8,color:'#fff',weight:3,fillColor:'#16a34a',fillOpacity:1}).addTo(map).bindPopup('Your current location').openPopup();
+ },()=>alert('Could not access your location. Allow location permission and try again.'),{enableHighAccuracy:true,timeout:10000});
+});
+window.addEventListener('resize',()=>map.invalidateSize());
+window.addEventListener('orientationchange',()=>setTimeout(()=>map.invalidateSize(),250));
+start();
+</script>
+</body>
+</html>
